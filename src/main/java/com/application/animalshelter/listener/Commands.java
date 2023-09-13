@@ -1,6 +1,8 @@
 package com.application.animalshelter.listener;
 
-
+/**
+ * Enumeration of user commands.
+ */
 public enum Commands {
     SHELTER_DOG("Приют для собак"),
     SHELTER_CAT("Приют для кошек"),
@@ -14,8 +16,14 @@ public enum Commands {
     Commands(String command) {
         this.command = command;
     }
+
     private final String command;
 
+    /**
+     * Gets the textual command.
+     *
+     * @return Textual command.
+     */
     public String getCommand() {
         return command;
     }

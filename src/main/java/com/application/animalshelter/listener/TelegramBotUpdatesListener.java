@@ -34,6 +34,11 @@ public class TelegramBotUpdatesListener {
         });
     }
 
+    /**
+     * Processes an update (user message).
+     *
+     * @param update Update object representing the update.
+     */
     public void process(Update update) {
         String userName = update.message().chat().username();
         String userMessageText = update.message().text();
@@ -46,12 +51,20 @@ public class TelegramBotUpdatesListener {
         sendMessage(chatId, userName, userMessageText);
     }
 
+    /**
+     * Sends a message to the user based on the textual command.
+     *
+     * @param chatId          Chat ID.
+     * @param userName        User's name.
+     * @param userMessageText User's message text.
+     */
     private void sendMessage(long chatId, String userName, String userMessageText) {
         SendMessage message = switch (userMessageText) {
             case "/start" -> messageBuilder.getStartMessage(chatId, userName);
             case "Информация о боте" -> messageBuilder.getInfoMessage(chatId);
             case "Вернуться к выбору приюта" -> messageBuilder.getKeyboardShelterMessage(chatId);
-            case "Приют для кошек", "Приют для собак" -> messageBuilder.getKeyboardCommandsMessage(chatId, userMessageText);
+            case "Приют для кошек", "Приют для собак" ->
+                    messageBuilder.getKeyboardCommandsMessage(chatId, userMessageText);
             default -> throw new IllegalStateException("Unexpected value: " + userMessageText);
         };
         try {
