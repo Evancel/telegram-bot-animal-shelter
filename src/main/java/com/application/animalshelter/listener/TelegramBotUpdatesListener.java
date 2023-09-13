@@ -65,7 +65,7 @@ public class TelegramBotUpdatesListener {
             case "Вернуться к выбору приюта" -> messageBuilder.getKeyboardShelterMessage(chatId);
             case "Приют для кошек", "Приют для собак" ->
                     messageBuilder.getKeyboardCommandsMessage(chatId, userMessageText);
-            default -> throw new IllegalStateException("Unexpected value: " + userMessageText);
+            default -> new SendMessage(chatId, "Неизвестная команда: " + userMessageText);
         };
         try {
             telegramBot.execute(message);
