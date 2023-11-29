@@ -8,6 +8,7 @@ import com.application.animalshelter.entıty.AnimalShelter;
 import com.application.animalshelter.entıty.AppUser;
 import com.application.animalshelter.entıty.CurrChoice;
 import com.application.animalshelter.enums.City;
+import com.application.animalshelter.enums.UserCommand;
 import com.application.animalshelter.service.AnimalShelterService;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
@@ -17,13 +18,15 @@ import com.pengrad.telegrambot.request.BaseRequest;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.request.SetChatMenuButton;
 import jakarta.annotation.PostConstruct;
+import jakarta.validation.constraints.Null;
+import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 
 /**
  * main class that processing the user's commands from telegram_bot
@@ -87,19 +90,16 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 //                    .menuButton(new MenuButtonWebApp("Menu", new WebAppInfo("https://core.telegram.org"))));
                         .menuButton(new MenuButton("/hello")));
 
-                String helloText = "Привет, " + telegramUser.firstName() + "!\n" +
-                        "Я помогу тебе забрать собаку или кошку домой из приюта Астаны. Для начала выбери животное:";
+                String helloText = "Hello, " + telegramUser.firstName() + "!\n" +
+                        "I will help you to take care of a cat or a dog from a shelter in Astana. " +
+                        "To start choose an animal: ";
 
                 //отправляем кнопки с вариантами приютов
-                InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup(
-                        new InlineKeyboardButton("Приют для кошек  " + "\uD83D\uDC08")
-                                .callbackData("catShelter"),
-                        new InlineKeyboardButton("Приют для собак   " + "\uD83D\uDC15")
-                                .callbackData("dogShelter"));
+                ArrayList<UserCommand> commandArrayList = new ArrayList<>();
+                commandArrayList.add(UserCommand.CAT_SHELTER);
+                commandArrayList.add(UserCommand.DOG_SHELTER);
 
-                SendMessage mess = new SendMessage(chatId, helloText);
-                mess.replyMarkup(inlineKeyboard);
-                telegramBot.execute(mess);
+                sendMessage(chatId,helloText,createInlineKeyboard(commandArrayList));
 
                 AppUser tempAppUser = new AppUser();
                 tempAppUser.setTelegramUserId(telegramUser.id());
@@ -110,116 +110,103 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
                 AppUser addedAppUser = appUserDAO.save(tempAppUser);
             } else{
-                InlineKeyboardMarkup inlineKeyboard1 = new InlineKeyboardMarkup();
-                inlineKeyboard1.addRow(new InlineKeyboardButton("Информация о приютах")
-                        .callbackData("infoAboutShelter"));
-                inlineKeyboard1.addRow(new InlineKeyboardButton("Как взять животное")
-                        .callbackData("howTakeAnimal"));
-                inlineKeyboard1.addRow(new InlineKeyboardButton("Прислать отчет о питомце")
-                        .callbackData("sendReport"));
-                inlineKeyboard1.addRow(new InlineKeyboardButton("Позвать волонтера")
-                        .callbackData("callVolunteer"));
+                ArrayList<UserCommand> commandArrayList = new ArrayList<>();
+                commandArrayList.add(UserCommand.INFO_ABOUT_SHELTER);
+                commandArrayList.add(UserCommand.HOW_TO_TAKE_ANIMAL);
+                commandArrayList.add(UserCommand.SEND_REPORT);
+                commandArrayList.add(UserCommand.CALL_VOLUNTEER);
 
-                SendMessage mess1 = new SendMessage(chatId,"Давай продолжим! Выбери, что тебя интересует:")
-                        .replyMarkup(inlineKeyboard1);
-                telegramBot.execute(mess1);
+                sendMessage(chatId,
+                        "Keep it going! Choose, what you are  interested in: ",
+                        createInlineKeyboard(commandArrayList));
             }
         }
     }
 
     private void switchCallback(CallbackQuery callbackQuery){
-        if(callbackQuery.data().contains("catShelter")||callbackQuery.data().contains("dogShelter")){
-            log.info("callback_data = catShelter");
+        if(callbackQuery.data().contains(UserCommand.CAT_SHELTER.toString())
+                ||callbackQuery.data().contains(UserCommand.DOG_SHELTER.toString())){
+            log.info("callback_data = animalShelter");
 
-            InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-            inlineKeyboard.addRow(new InlineKeyboardButton("Информация о приютах")
-                    .callbackData("infoAboutShelter"));
-            inlineKeyboard.addRow(new InlineKeyboardButton("Как взять животное")
-                    .callbackData("howTakeAnimal"));
-            inlineKeyboard.addRow(new InlineKeyboardButton("Прислать отчет о питомце")
-                    .callbackData("sendReport"));
-            inlineKeyboard.addRow(new InlineKeyboardButton("Позвать волонтера")
-                    .callbackData("callVolunteer"));
+            ArrayList<UserCommand> commandArrayList = new ArrayList<>();
+            commandArrayList.add(UserCommand.INFO_ABOUT_SHELTER);
+            commandArrayList.add(UserCommand.HOW_TO_TAKE_ANIMAL);
+            commandArrayList.add(UserCommand.SEND_REPORT);
+            commandArrayList.add(UserCommand.CALL_VOLUNTEER);
 
-            SendMessage mess = new SendMessage(callbackQuery.message().chat().id(),"Выбор меню")
-                    .replyMarkup(inlineKeyboard);
-            telegramBot.execute(mess);
-        } else if(callbackQuery.data().contains("infoAboutShelter")){
+            sendMessage(callbackQuery.message().chat().id(),
+                    "Keep it going! Choose, what you are  interested in: ",
+                    createInlineKeyboard(commandArrayList));
+
+        } else if(callbackQuery.data().contains(UserCommand.INFO_ABOUT_SHELTER.toString())){
             log.info("callback_data = infoAboutShelter");
 
-            InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-            inlineKeyboard.addRow(new InlineKeyboardButton("Адреса приютов и время работы")
-                    .callbackData("sheltersAddresses"));
-            inlineKeyboard.addRow(new InlineKeyboardButton("Оформление пропуска на машину")
-                    .callbackData("passCar"));
-            inlineKeyboard.addRow(new InlineKeyboardButton("Правила нахождения внутри и общения с животным")
-                    .callbackData("shelterRules"));
-            inlineKeyboard.addRow(new InlineKeyboardButton("Записать контактные данные для связи")
-                    .callbackData("contactInformation"));
-            inlineKeyboard.addRow(new InlineKeyboardButton("Позвать волонтера")
-                    .callbackData("callVolunteer"));
+            ArrayList<UserCommand> commandArrayList = new ArrayList<>();
+            commandArrayList.add(UserCommand.SHELTERS_ADDRESSES);
+            commandArrayList.add(UserCommand.CAR_PASS);
+            commandArrayList.add(UserCommand.SHELTER_RULES);
+            commandArrayList.add(UserCommand.CONTACT_INFORMATION);
+            commandArrayList.add(UserCommand.CALL_VOLUNTEER);
 
-            SendMessage mess = new SendMessage(callbackQuery.message().chat().id(),"Я помогу тебе " +
-                    "узнать информацию о приюте! Выбери, что тебя интересует: ")
-                    .replyMarkup(inlineKeyboard);
-            telegramBot.execute(mess);
-        } else if(callbackQuery.data().contains("sheltersAddresses")){
-            log.info("callback_data = sheltersAddresses");
+            sendMessage(callbackQuery.message().chat().id(),
+                    "What do you want to know?",
+                    createInlineKeyboard(commandArrayList));
 
-            InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-            inlineKeyboard.addRow(new InlineKeyboardButton("Алматы")
-                    .callbackData(City.ALMATY.toString()));
-            inlineKeyboard.addRow(new InlineKeyboardButton("Астана")
-                    .callbackData(City.ASTANA.toString()));
-            inlineKeyboard.addRow(new InlineKeyboardButton("Аркалык")
-                    .callbackData(City.ARKALYK.toString()));
+        } else if(callbackQuery.data().contains(UserCommand.SHELTERS_ADDRESSES.toString())){
+            log.info("callback_data = shelterAddress");
 
-            SendMessage mess = new SendMessage(callbackQuery.message().chat().id(),"Выбери город:")
-                    .replyMarkup(inlineKeyboard);
-            telegramBot.execute(mess);
-        } else if(callbackQuery.data().contains(City.ALMATY.toString())){
-            log.info("callback_data = City");
-            InlineKeyboardMarkup inlineKeyboard = chooseAnimalShelters(City.ALMATY);
+            ArrayList<City> cities = new ArrayList<>(List.of(City.values()));
 
-            SendMessage mess = new SendMessage(callbackQuery.message().chat().id(),"Выбери приют:")
-                    .replyMarkup(inlineKeyboard);
-            telegramBot.execute(mess);
-        } else if(callbackQuery.data().contains(City.ASTANA.toString())){
-            log.info("callback_data = City");
-            InlineKeyboardMarkup inlineKeyboard = chooseAnimalShelters(City.ASTANA);
+            sendMessage(callbackQuery.message().chat().id(),
+                    "Choose your city:",
+                    createCityInlineKeyboard(cities));
 
-            SendMessage mess = new SendMessage(callbackQuery.message().chat().id(),"Выбери приют:")
-                    .replyMarkup(inlineKeyboard);
-            telegramBot.execute(mess);
-        } else if(callbackQuery.data().contains(City.ARKALYK.toString())){
-            log.info("callback_data = City");
-            InlineKeyboardMarkup inlineKeyboard = chooseAnimalShelters(City.ARKALYK);
+        } else if(callbackQuery.data().contains("city_")){
+            log.info("callback_data = City; " + callbackQuery.data());
 
-            SendMessage mess = new SendMessage(callbackQuery.message().chat().id(),"Выбери приют:")
-                    .replyMarkup(inlineKeyboard);
-            telegramBot.execute(mess);
-        } else if(callbackQuery.data().contains(animalShelterDAO.findByName(callbackQuery.data()).getName())){
+            InlineKeyboardMarkup inlineKeyboard = chooseAnimalShelters(
+                    City.valueOf(callbackQuery.data().substring(5)));
+            sendMessage(callbackQuery.message().chat().id(),
+                    "Choose your animal shelter:",
+                    inlineKeyboard);
+
+        }  else if(callbackQuery.data().contains("AS_")) {
             log.info("callback_data = " + callbackQuery.data());
 
             CurrChoice tempCurrChoice = new CurrChoice();
             tempCurrChoice.setCurrentDateTime(LocalDateTime.now());
             tempCurrChoice.setAppUser(appUserDAO.findByTelegramUserId(callbackQuery.from().id()));
-            tempCurrChoice.setAnimalShelter(animalShelterDAO.findByName(callbackQuery.data()));
-
+            AnimalShelter tempAnimalShelter = animalShelterDAO.findById(
+                    Long.valueOf(callbackQuery.data().substring(3))).orElse(null);
+            if (tempAnimalShelter == null) {
+                log.info("Warning! The non-existed animal shelter has chosen!");
+            }
+            tempCurrChoice.setAnimalShelter(tempAnimalShelter);
             CurrChoice savedCurrChoice = currChoiceDAO.save(tempCurrChoice);
 
+            ArrayList<UserCommand> commandArrayList = new ArrayList<>();
+            commandArrayList.add(UserCommand.SHELTER_WORKING_HOURS);
+            commandArrayList.add(UserCommand.SHELTER_ADDRESS);
+            commandArrayList.add(UserCommand.SHELTER_DRIVING_DIRECTION);
 
+            sendMessage(callbackQuery.message().chat().id(),
+                    "What would you like to know?",
+                    createInlineKeyboard(commandArrayList));
+        } else if(callbackQuery.data().contains(UserCommand.SHELTER_WORKING_HOURS.toString())){
+            log.info("callback_data = " + callbackQuery.data());
 
-            InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
-            inlineKeyboard.addRow(new InlineKeyboardButton("Расписание работы приюта")
-                    .callbackData("WorkHours"));
-            inlineKeyboard.addRow(new InlineKeyboardButton("Адрес")
-                    .callbackData("Address"));
-            inlineKeyboard.addRow(new InlineKeyboardButton("Схема проезда")
-                    .callbackData("LocationMap"));
-            SendMessage mess = new SendMessage(callbackQuery.message().chat().id(),"Выбери приют:")
-                    .replyMarkup(inlineKeyboard);
-            telegramBot.execute(mess);
+            Long currAnimalShelterId =  currChoiceDAO.findAnimalShelterIdByChoiceId(
+                    currChoiceDAO.findLastChoiceByAppUserId(
+                            appUserDAO.findByTelegramUserId(callbackQuery.from().id()).getId()));
+            String workingHours = animalShelterDAO.findWorkingHoursById(currAnimalShelterId);
+
+            Map<String, String> buttons = new TreeMap<>();
+            buttons.put(" " + workingHours,"AS_" + currAnimalShelterId);
+            buttons.put("Return","AS_" + currAnimalShelterId);
+
+            sendMessage(callbackQuery.message().chat().id(),
+                    "We are open: ",
+                    createFreeInlineKeyboard(buttons));
         }
     }
 
@@ -228,9 +215,39 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         List<AnimalShelter> animalShelterList = animalShelterService.getAnimalSheltersByCity(city);
         for (int i=0; i<animalShelterList.size();i++){
             inlineKeyboard.addRow(new InlineKeyboardButton(animalShelterList.get(i).getName())
-                    .callbackData(animalShelterList.get(i).getName()));
+                    .callbackData("AS_" + animalShelterList.get(i).getId()));
         }
         return  inlineKeyboard;
+    }
+
+    //собрать метод, переработать алгоритм хождения по кнопкам, вызов callback
+    private  InlineKeyboardMarkup createInlineKeyboard(ArrayList<UserCommand> commandArrayList){
+        InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+        commandArrayList.forEach(e -> inlineKeyboard.addRow(new InlineKeyboardButton(e.getDescription())
+                .callbackData(e.toString())));
+        return inlineKeyboard;
+    }
+
+    private  InlineKeyboardMarkup createFreeInlineKeyboard(Map<String,String> buttons){
+        InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+        for(Map.Entry<String,String> entry : buttons.entrySet()){
+           inlineKeyboard.addRow(new InlineKeyboardButton(entry.getKey())
+                    .callbackData(entry.getValue()));
+        }
+        return inlineKeyboard;
+    }
+
+    private  InlineKeyboardMarkup createCityInlineKeyboard(ArrayList<City> cities){
+        InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+        cities.forEach(e -> inlineKeyboard.addRow(new InlineKeyboardButton(e.getName())
+                .callbackData("city_" + e)));
+        return inlineKeyboard;
+    }
+
+    private void sendMessage(Long chatId, String text, InlineKeyboardMarkup inlineKeyboard){
+        SendMessage mess = new SendMessage(chatId,text)
+                .replyMarkup(inlineKeyboard);
+        telegramBot.execute(mess);
     }
 
 }
