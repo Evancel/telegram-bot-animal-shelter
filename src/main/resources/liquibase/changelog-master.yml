@@ -9,3 +9,7 @@ databaseChangeLog:
       file: liquibase/scripts/create_curr_choice_table.sql
   - include:
       file: liquibase/scripts/insert_into_animal_shelter_table.sql
+  - include:
+      file: liquibase/scripts/create_volunteer_table.sql
+  - include:
+      file: liquibase/scripts/insert_into_volunteer_table.sql

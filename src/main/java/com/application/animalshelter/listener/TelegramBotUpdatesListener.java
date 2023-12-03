@@ -4,9 +4,11 @@ package com.application.animalshelter.listener;
 import com.application.animalshelter.dao.AnimalShelterDAO;
 import com.application.animalshelter.dao.AppUserDAO;
 import com.application.animalshelter.dao.CurrChoiceDAO;
+import com.application.animalshelter.dao.VolunteerDAO;
 import com.application.animalshelter.entity.AnimalShelter;
 import com.application.animalshelter.entity.AppUser;
 import com.application.animalshelter.entity.CurrChoice;
+import com.application.animalshelter.entity.Volunteer;
 import com.application.animalshelter.enums.City;
 import com.application.animalshelter.enums.UserCommand;
 import com.application.animalshelter.service.AnimalShelterService;
@@ -35,15 +37,17 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private final AppUserDAO appUserDAO;
     private final AnimalShelterDAO animalShelterDAO;
     private final CurrChoiceDAO currChoiceDAO;
+    private final VolunteerDAO volunteerDAO;
     private final AnimalShelterService animalShelterService;
 
     @Autowired
     private TelegramBot telegramBot;
 
-    public TelegramBotUpdatesListener(AppUserDAO appUserDAO, AnimalShelterDAO animalShelterDAO, CurrChoiceDAO currChoiceDAO, AnimalShelterService animalShelterService) {
+    public TelegramBotUpdatesListener(AppUserDAO appUserDAO, AnimalShelterDAO animalShelterDAO, CurrChoiceDAO currChoiceDAO, VolunteerDAO volunteerDAO, AnimalShelterService animalShelterService) {
         this.appUserDAO = appUserDAO;
         this.animalShelterDAO = animalShelterDAO;
         this.currChoiceDAO = currChoiceDAO;
+        this.volunteerDAO = volunteerDAO;
         this.animalShelterService = animalShelterService;
     }
 
@@ -66,7 +70,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 switchCallback(update.callbackQuery());
             }
     });
-    return CONFIRMED_UPDATES_ALL;
+        return CONFIRMED_UPDATES_ALL;
     }
 
     /**
@@ -185,6 +189,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             commandArrayList.add(UserCommand.SHELTER_WORKING_HOURS);
             commandArrayList.add(UserCommand.SHELTER_ADDRESS);
             commandArrayList.add(UserCommand.SHELTER_DRIVING_DIRECTION);
+            commandArrayList.add(UserCommand.CALL_VOLUNTEER);
 
             sendMessage(callbackQuery.message().chat().id(),
                     "What would you like to know?",
@@ -204,7 +209,17 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             sendMessage(callbackQuery.message().chat().id(),
                     "We are open: ",
                     createFreeInlineKeyboard(buttons));
+        } else if(callbackQuery.data().contains(UserCommand.CALL_VOLUNTEER.toString())) {
+            log.info("callback_data = " + callbackQuery.data());
+
+           List <Volunteer> availableVolunteer  = volunteerDAO.findByIsAvailable(true);
+
+            InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+            inlineKeyboard.addRow(new InlineKeyboardButton("Button")
+                    .url(availableVolunteer.get(0).getLogin()));
+            sendMessage(callbackQuery.message().chat().id(),"text",inlineKeyboard);
         }
+
     }
 
     private InlineKeyboardMarkup chooseAnimalShelters(City city){
