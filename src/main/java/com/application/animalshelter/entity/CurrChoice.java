@@ -1,4 +1,4 @@
-package com.application.animalshelter.entıty;
+package com.application.animalshelter.entity;
 
 import jakarta.persistence.*;
 

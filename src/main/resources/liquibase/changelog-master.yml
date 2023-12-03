@@ -2,8 +2,10 @@ databaseChangeLog:
   - include:
       file: liquibase/scripts/create_app_user_table.sql
   - include:
+      file: liquibase/scripts/create_pass_rules_table.sql
+  - include:
       file: liquibase/scripts/create_animal_shelter_table.sql
   - include:
-      file: liquibase/scripts/insert_into_animal_shelter_table.sql
-  - include:
       file: liquibase/scripts/create_curr_choice_table.sql
+  - include:
+      file: liquibase/scripts/insert_into_animal_shelter_table.sql

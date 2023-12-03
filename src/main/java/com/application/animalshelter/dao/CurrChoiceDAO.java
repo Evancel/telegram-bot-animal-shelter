@@ -1,7 +1,6 @@
 package com.application.animalshelter.dao;
 
-import com.application.animalshelter.entıty.AppUser;
-import com.application.animalshelter.entıty.CurrChoice;
+import com.application.animalshelter.entity.CurrChoice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

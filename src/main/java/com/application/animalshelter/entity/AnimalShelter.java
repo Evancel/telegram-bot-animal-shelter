@@ -1,4 +1,4 @@
-package com.application.animalshelter.entıty;
+package com.application.animalshelter.entity;
 
 import com.application.animalshelter.enums.AnimalType;
 import com.application.animalshelter.enums.City;
@@ -27,8 +27,9 @@ public class AnimalShelter {
 
     //TODO переделать в календарь
     private String workingHours;
-
-    private String passRules;
+    @OneToOne
+    @JoinColumn(name="pass_rules_id", referencedColumnName = "id")
+    private PassRules passRules;
     private String rules;
 
     @Enumerated(EnumType.STRING)
@@ -84,11 +85,11 @@ public class AnimalShelter {
         this.workingHours = workingHours;
     }
 
-    public String getPassRules() {
+    public PassRules getPassRules() {
         return passRules;
     }
 
-    public void setPassRules(String passRules) {
+    public void setPassRules(PassRules passRules) {
         this.passRules = passRules;
     }
 

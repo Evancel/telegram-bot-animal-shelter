@@ -1,5 +1,5 @@
 --liquibase formatted sql
--- changeset amargolina:2
+-- changeset amargolina:3
 CREATE TABLE animal_shelter (
                           id SERIAL primary key,
                           name TEXT,
@@ -7,7 +7,10 @@ CREATE TABLE animal_shelter (
                           city TEXT,
                           address TEXT,
                           working_hours TEXT,
-                          pass_rules    TEXT,
+                          pass_rules_id BIGINT,
                           rules TEXT,
-                          animal_type   TEXT
+                          animal_type   TEXT,
+                          CONSTRAINT fk_pass_rules_id
+                          FOREIGN KEY (pass_rules_id)
+                          REFERENCES pass_rules(id)
 );

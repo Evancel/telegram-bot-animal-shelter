@@ -1,12 +1,14 @@
 package com.application.animalshelter.listener;
 
-import com.application.animalshelter.entıty.AnimalShelter;
+import com.application.animalshelter.entity.AnimalShelter;
 import com.application.animalshelter.service.AnimalShelterService;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
 /**
  * API for volunteers
@@ -38,15 +40,59 @@ public class VolunteerController {
         return ResponseEntity.ok(savedAnimalShelter);
     }
 
+
     /**
-     * a volunteer can get the existing shelter by its id
-     * @param Id must not be null
+     * a volunteer can add an address of the shelter or change an existing address
+     * @param id must not be null
      * @return ResponseEntity 200 code
      * @see org.springframework.data.jpa.repository.JpaRepository#save(Object)
      */
-    @GetMapping()
-    public ResponseEntity<AnimalShelter> getShelter(@PathVariable Long Id){
-        AnimalShelter animalShelter = animalShelterService.getAnimalShelter(Id);
+    @PostMapping("/{id}/address")
+    public ResponseEntity<AnimalShelter> updateAddress(@PathVariable Long id, @RequestBody String address){
+        if(id==null || animalShelterService.getAnimalShelter(id)==null){
+            return ResponseEntity.notFound().build();
+        }
+        AnimalShelter savedAnimalShelter = animalShelterService.updateAddress(id, address);
+
+        return ResponseEntity.ok(savedAnimalShelter);
+    }
+
+    /**
+     * a volunteer can add a pass rules schema of the shelter or change the existing pass rules schema
+     * @param id must not be null
+     * @return ResponseEntity 200 code
+     * @see org.springframework.data.jpa.repository.JpaRepository#save(Object)
+     */
+    @PostMapping(value = "/{id}/passRules", consumes= MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> updatePassRules(@PathVariable Long id,
+                                                         @RequestBody MultipartFile passRules) throws IOException {
+
+        if (id == null || animalShelterService.getAnimalShelter(id) == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (passRules.getSize() > 1024 * 3000) {
+            return ResponseEntity.badRequest().body("The image is too big!");
+        }
+
+        //add a verification about the extension of the file: .jpg, .png
+        if (!passRules.getContentType().equals("image/jpeg") && !passRules.getContentType().equals("image/png")) {
+            return ResponseEntity.badRequest().body("The wrong type of the file.");
+        }
+
+        animalShelterService.uploadPassRules(id, passRules);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * a volunteer can get the existing shelter by its id
+     * @param id must not be null
+     * @return ResponseEntity 200 code
+     * @see org.springframework.data.jpa.repository.JpaRepository#save(Object)
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<AnimalShelter> getShelter(@PathVariable Long id){
+        AnimalShelter animalShelter = animalShelterService.getAnimalShelter(id);
         return ResponseEntity.ok(animalShelter);
     }
 
@@ -56,9 +102,9 @@ public class VolunteerController {
         return ResponseEntity.ok(animalShelters);
     }
 
-    @DeleteMapping()
-    public ResponseEntity<?> deleteAnimalShelter(@PathVariable Long Id){
-        animalShelterService.deleteAnimalShelter(Id);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteAnimalShelter(@PathVariable Long id){
+        animalShelterService.deleteAnimalShelter(id);
         return ResponseEntity.ok().build();
     }
 
